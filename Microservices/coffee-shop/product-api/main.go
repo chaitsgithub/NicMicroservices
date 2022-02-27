@@ -45,7 +45,7 @@ func main() {
 	getRouter.Handle("/docs", suih)
 	//getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
-	l.Println("Service Started...")
+	l.Println("Service Started on port 8080...")
 
 	s := &http.Server{
 		Addr:         ":8080",
