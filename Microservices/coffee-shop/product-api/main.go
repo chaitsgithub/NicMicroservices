@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 )
 
@@ -19,7 +20,7 @@ func main() {
 	sm := mux.NewRouter()
 
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
-	getRouter.HandleFunc("/", ph.GetProducts)
+	getRouter.HandleFunc("/products", ph.GetProducts)
 	getRouter.Use(ph.LoggingMiddleware)
 
 	putRouter := sm.Methods(http.MethodPut).Subrouter()
@@ -29,6 +30,20 @@ func main() {
 	postRouter := sm.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/", ph.AddProduct)
 	postRouter.Use(ph.LoggingMiddleware, ph.GetProductMiddleware)
+
+	deleteRouter := sm.Methods(http.MethodDelete).Subrouter()
+	deleteRouter.HandleFunc("/{id:[0-9]+}", ph.DeleteProduct)
+	deleteRouter.Use(ph.LoggingMiddleware, ph.GetProductMiddleware)
+
+	// opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	// sh := middleware.Redoc(opts, nil)
+	// getRouter.Handle("/docs", sh)
+	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
+
+	suiopts := middleware.SwaggerUIOpts{SpecURL: "/swagger.yaml"}
+	suih := middleware.SwaggerUI(suiopts, nil)
+	getRouter.Handle("/docs", suih)
+	//getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
 	l.Println("Service Started...")
 

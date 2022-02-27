@@ -5,16 +5,19 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
+
+	"gopkg.in/go-playground/validator.v9"
 )
 
 type Product struct {
 	ID          int     `json:"id"`
-	Name        string  `json:"name"`
+	Name        string  `json:"name" validate:"required""`
 	Description string  `json:"description"`
-	Price       float64 `json:"price"`
-	SKU         string  `json:"sku"`
+	Price       float64 `json:"price" validate:"required,gte=0,lte=130"`
+	SKU         string  `json:"sku" validate:"required,sku"`
 	CreatedOn   string  `json:"-"`
 	UpdatedOn   string  `json:"-"`
 	DeletedOn   string  `json:"-"`
@@ -30,6 +33,21 @@ func (p *Products) ToJSON(w http.ResponseWriter) error {
 func (p *Product) FromJSON(r io.Reader) error {
 	d := json.NewDecoder(r)
 	return d.Decode(p)
+}
+
+func (p *Product) Validate() error {
+	validate := validator.New()
+	validate.RegisterValidation("sku", SKUValidator)
+	return validate.Struct(p)
+}
+
+func SKUValidator(fl validator.FieldLevel) bool {
+	r := regexp.MustCompile("[a-z]+-[a-z]+-[a-z]+")
+	matches := r.FindAllString(fl.Field().String(), -1)
+	if len(matches) != 1 {
+		return false
+	}
+	return true
 }
 
 func GetProducts() Products {
@@ -55,6 +73,16 @@ func UpdateProduct(p *Product, id int) error {
 			productList[k].Price = p.Price
 			productList[k].SKU = p.SKU
 			productList[k].UpdatedOn = time.Now().UTC().String()
+			return nil
+		}
+	}
+	return errors.New("Product Not Found for ID : " + strconv.Itoa(id))
+}
+
+func DeleteProduct(id int) error {
+	for k, v := range productList {
+		if v.ID == id {
+			productList = append(productList[:k], productList[k+1:]...)
 			return nil
 		}
 	}

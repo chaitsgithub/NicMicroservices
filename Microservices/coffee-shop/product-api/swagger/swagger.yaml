@@ -1,0 +1,61 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  Product:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      price:
+        format: double
+        type: number
+        x-go-name: Price
+      sku:
+        type: string
+        x-go-name: SKU
+    type: object
+    x-go-package: NicJackson/Microservices/coffee-shop/product-api/data
+host: localhost:8080
+info:
+  description: Documentation for Products API
+  title: Products API.
+paths:
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of products new
+      operationId: listProducts
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/ProductsResponse'
+      schemes:
+      - http
+      tags:
+      - products
+produces:
+- application/json
+responses:
+  ProductsResponse:
+    description: A list of products returns in the response
+    headers:
+      Products:
+        description: |-
+          All products in the system
+          in: Body
+        items:
+          $ref: '#/definitions/Product'
+        type: array
+schemes:
+- http
+swagger: "2.0"
